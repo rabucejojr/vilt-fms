@@ -78,6 +78,70 @@ class FileManagementController extends Controller
 
     public function store(Request $request)
     {
+        // Handle multiple file uploads for drag and drop
+        if ($request->hasFile('files')) {
+            $request->validate([
+                'files.*' => 'required|file|max:10240', // 10MB max per file
+                'folder_id' => 'nullable|exists:folders,id',
+            ]);
+
+            $uploadedFiles = [];
+            $errors = [];
+
+            foreach ($request->file('files') as $file) {
+                try {
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $size = $file->getSize();
+                    $type = $file->getMimeType();
+
+                    $fileName = Str::random(40) . '.' . $extension;
+                    $path = $file->storeAs('files', $fileName, 'public');
+
+                    $uploadedFile = File::create([
+                        'name' => pathinfo($originalName, PATHINFO_FILENAME),
+                        'original_name' => $originalName,
+                        'path' => $path,
+                        'size' => $size,
+                        'type' => $type,
+                        'extension' => $extension,
+                        'user_id' => Auth::id(),
+                        'folder_id' => $request->folder_id,
+                        'description' => null,
+                        'is_public' => false,
+                    ]);
+
+                    $uploadedFiles[] = $uploadedFile;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to upload {$originalName}: " . $e->getMessage();
+                }
+            }
+
+            if ($request->expectsJson()) {
+                if (empty($errors)) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => count($uploadedFiles) . ' file(s) uploaded successfully',
+                        'files' => $uploadedFiles
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Some files failed to upload',
+                        'errors' => $errors,
+                        'uploaded_files' => $uploadedFiles
+                    ], 422);
+                }
+            }
+
+            if (empty($errors)) {
+                return redirect()->back()->with('success', count($uploadedFiles) . ' file(s) uploaded successfully!');
+            } else {
+                return redirect()->back()->withErrors($errors)->with('warning', 'Some files failed to upload.');
+            }
+        }
+
+        // Handle single file upload (existing functionality)
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
             'folder_id' => 'nullable|exists:folders,id',
@@ -94,7 +158,7 @@ class FileManagementController extends Controller
         $fileName = Str::random(40) . '.' . $extension;
         $path = $file->storeAs('files', $fileName, 'public');
 
-        File::create([
+        $uploadedFile = File::create([
             'name' => pathinfo($originalName, PATHINFO_FILENAME),
             'original_name' => $originalName,
             'path' => $path,
@@ -106,6 +170,14 @@ class FileManagementController extends Controller
             'description' => $request->description,
             'is_public' => $request->boolean('is_public', false),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'File uploaded successfully',
+                'file' => $uploadedFile
+            ]);
+        }
 
         return redirect()->back()->with('success', 'File uploaded successfully!');
     }
