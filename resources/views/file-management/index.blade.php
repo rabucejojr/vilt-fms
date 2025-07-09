@@ -429,6 +429,8 @@
             function handleFiles(files) {
                 if (files.length === 0) return;
 
+                console.log('Handling files:', files.length, 'files');
+
                 // Validate all files first
                 let allErrors = [];
                 let validFiles = [];
@@ -473,7 +475,10 @@
                 @endif
 
                 // Add CSRF token
-                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                    document.querySelector('input[name="_token"]')?.value ||
+                    '{{ csrf_token() }}';
+                formData.append('_token', csrfToken);
 
                 // Simulate progress for better UX
                 let progress = 0;
@@ -484,18 +489,29 @@
                     uploadProgressText.textContent = Math.round(progress) + '%';
                 }, 200);
 
+                console.log('Uploading files to:', '{{ route('files.store') }}');
+                console.log('CSRF Token:', csrfToken);
+                console.log('FormData entries:', Array.from(formData.entries()));
+
                 // Upload files
                 fetch('{{ route('files.store') }}', {
                         method: 'POST',
                         body: formData,
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
                         }
                     })
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(response => {
                         clearInterval(progressInterval);
 
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
                         if (data.success) {
                             // Update progress to 100%
                             uploadProgressFill.style.width = '100%';
@@ -514,14 +530,15 @@
                                 window.location.reload();
                             }, 1500);
                         } else {
-                            showNotification('Upload failed: ' + (data.message || 'Unknown error'), 'error');
+                            const errorMessage = data.message || data.errors?.join(', ') || 'Unknown error';
+                            showNotification('Upload failed: ' + errorMessage, 'error');
                             uploadProgress.classList.add('hidden');
                         }
                     })
                     .catch(error => {
                         clearInterval(progressInterval);
-                        console.error('Error:', error);
-                        showNotification('Upload failed. Please try again.', 'error');
+                        console.error('Upload Error:', error);
+                        showNotification('Upload failed: ' + error.message, 'error');
                         uploadProgress.classList.add('hidden');
                     });
             }
