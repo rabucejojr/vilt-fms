@@ -19,7 +19,7 @@
                     @endif
                 </h2>
             </div>
-            <div class="flex space-x-2">
+            {{-- <div class="flex space-x-2">
                 <button onclick="openUploadModal()"
                     class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
                     <i class="fas fa-upload mr-1"></i> Upload
@@ -28,7 +28,7 @@
                     class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm">
                     <i class="fas fa-folder-plus mr-1"></i> New Folder
                 </button>
-            </div>
+            </div> --}}
         </div>
     </x-slot>
 
