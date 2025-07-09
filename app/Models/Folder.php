@@ -16,7 +16,7 @@ class Folder extends Model
         'description',
         'user_id',
         'parent_id',
-        'is_public'
+        'is_public',
     ];
 
     protected $casts = [

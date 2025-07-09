@@ -20,7 +20,7 @@ class File extends Model
         'user_id',
         'folder_id',
         'is_public',
-        'description'
+        'description',
     ];
 
     protected $casts = [
@@ -47,7 +47,7 @@ class File extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function getIconAttribute(): string

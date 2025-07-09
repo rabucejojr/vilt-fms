@@ -15,7 +15,7 @@ class FolderController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
             'parent_id' => 'nullable|exists:folders,id',
-            'is_public' => 'boolean'
+            'is_public' => 'boolean',
         ]);
 
         Folder::create([

@@ -60,7 +60,7 @@ class FileManagementController extends Controller
             ->when($folderId, function ($query) use ($folderId) {
                 return $query->where('folder_id', $folderId);
             })
-            ->when(!$folderId, function ($query) {
+            ->when(! $folderId, function ($query) {
                 return $query->whereNull('folder_id');
             })
             ->with('folder')
@@ -95,7 +95,7 @@ class FileManagementController extends Controller
                     $size = $file->getSize();
                     $type = $file->getMimeType();
 
-                    $fileName = Str::random(40) . '.' . $extension;
+                    $fileName = Str::random(40).'.'.$extension;
                     $path = $file->storeAs('files', $fileName, 'public');
 
                     $uploadedFile = File::create([
@@ -113,7 +113,7 @@ class FileManagementController extends Controller
 
                     $uploadedFiles[] = $uploadedFile;
                 } catch (\Exception $e) {
-                    $errors[] = "Failed to upload {$originalName}: " . $e->getMessage();
+                    $errors[] = "Failed to upload {$originalName}: ".$e->getMessage();
                 }
             }
 
@@ -121,21 +121,21 @@ class FileManagementController extends Controller
                 if (empty($errors)) {
                     return response()->json([
                         'success' => true,
-                        'message' => count($uploadedFiles) . ' file(s) uploaded successfully',
-                        'files' => $uploadedFiles
+                        'message' => count($uploadedFiles).' file(s) uploaded successfully',
+                        'files' => $uploadedFiles,
                     ]);
                 } else {
                     return response()->json([
                         'success' => false,
                         'message' => 'Some files failed to upload',
                         'errors' => $errors,
-                        'uploaded_files' => $uploadedFiles
+                        'uploaded_files' => $uploadedFiles,
                     ], 422);
                 }
             }
 
             if (empty($errors)) {
-                return redirect()->back()->with('success', count($uploadedFiles) . ' file(s) uploaded successfully!');
+                return redirect()->back()->with('success', count($uploadedFiles).' file(s) uploaded successfully!');
             } else {
                 return redirect()->back()->withErrors($errors)->with('warning', 'Some files failed to upload.');
             }
@@ -146,7 +146,7 @@ class FileManagementController extends Controller
             'file' => 'required|file|max:10240', // 10MB max
             'folder_id' => 'nullable|exists:folders,id',
             'description' => 'nullable|string|max:500',
-            'is_public' => 'boolean'
+            'is_public' => 'boolean',
         ]);
 
         $file = $request->file('file');
@@ -155,7 +155,7 @@ class FileManagementController extends Controller
         $size = $file->getSize();
         $type = $file->getMimeType();
 
-        $fileName = Str::random(40) . '.' . $extension;
+        $fileName = Str::random(40).'.'.$extension;
         $path = $file->storeAs('files', $fileName, 'public');
 
         $uploadedFile = File::create([
@@ -175,7 +175,7 @@ class FileManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'File uploaded successfully',
-                'file' => $uploadedFile
+                'file' => $uploadedFile,
             ]);
         }
 
@@ -196,7 +196,7 @@ class FileManagementController extends Controller
 
     public function download(File $file)
     {
-        if ($file->user_id !== Auth::id() && !$file->is_public) {
+        if ($file->user_id !== Auth::id() && ! $file->is_public) {
             abort(403);
         }
 
