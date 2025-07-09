@@ -15,7 +15,7 @@
                     @if ($currentFolder)
                         {{ $currentFolder->name }}
                     @else
-                        {{ __('All Files') }}
+                        All Files
                     @endif
                 </h2>
             </div>
